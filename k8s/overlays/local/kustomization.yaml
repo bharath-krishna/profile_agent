@@ -1,0 +1,16 @@
+# k8s/overlays/local/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+
+# Patches for local development (optional)
+# patchesStrategicMerge:
+#   - service-patch.yaml
+
+# Optional: Override config values for local environment
+# configMapGenerator:
+#   - name: familyman-ui-config
+#     behavior: merge
+#     literals:
+#       - LOG_LEVEL=debug

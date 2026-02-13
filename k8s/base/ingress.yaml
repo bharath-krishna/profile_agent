@@ -1,0 +1,25 @@
+# k8s/base/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: familyman-ui-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Increase timeout for agent streaming responses
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  # HAProxy Ingress Controller (NodePort 30080) - matches all other services in the cluster
+  # SSL is terminated by HAProxy on the host, so no TLS section needed here
+  ingressClassName: haproxy
+  rules:
+  - host: profile.krishb.in
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: familyman-ui-service
+            port:
+              number: 80

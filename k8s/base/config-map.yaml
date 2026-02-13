@@ -1,0 +1,24 @@
+# k8s/base/config-map.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: familyman-ui-config
+data:
+  # Next.js configuration
+  NODE_ENV: "production"
+  PORT: "3000"
+
+  # FastAPI agent configuration
+  PYTHON_PORT: "8001"
+
+  # Model configuration
+  # USE_LITELLM: "false"
+  # MODEL_NAME: "gemini-2.5-flash"
+  USE_LITELLM: "true"
+  MODEL_NAME: "openai/model"
+  OPENAI_API_BASE: "https://vllm.krishb.in/v1"
+  OPENAI_API_KEY: "dummy"
+  OPIK_URL_OVERRIDE: "https://opik.krishb.in/api"
+
+  # Logging
+  LOG_LEVEL: "info"

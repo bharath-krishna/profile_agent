@@ -1,0 +1,20 @@
+[project]
+name = "familyman-agent"
+version = "0.1.0"
+description = "FamilyMan Agent with shared state"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "python-dotenv",
+    "pydantic",
+    "google-adk[a2a]>=1.22.1",
+    "a2a-sdk>=0.3.22",
+    "google-genai",
+    "ag-ui-adk",
+    "ipdb>=0.13.13",
+    "opik>=1.10.1",
+    "langfuse==3.10.5",
+    "openinference-instrumentation-google-adk>=0.1.7",
+    "litellm>=1.80.9",
+]
