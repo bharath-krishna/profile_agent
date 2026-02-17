@@ -19,6 +19,7 @@ data:
   OPENAI_API_BASE: "https://ollama.krishb.in/v1"
   OPENAI_API_KEY: "dummy"
   OPIK_URL_OVERRIDE: "https://opik.krishb.in/api"
+  NOTES_DIR: /conversation_notes
 
   # Logging
   LOG_LEVEL: "info"

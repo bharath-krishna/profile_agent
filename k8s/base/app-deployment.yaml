@@ -29,6 +29,9 @@ spec:
             name: familyman-ui-config
         - secretRef:
             name: familyman-ui-secrets
+        volumeMounts:
+        - name: conversation-notes
+          mountPath: /conversation_notes
         resources:
           requests:
             memory: "512Mi"
@@ -52,3 +55,8 @@ spec:
         #   periodSeconds: 5
         #   timeoutSeconds: 3
         #   failureThreshold: 3
+      volumes:
+      - name: conversation-notes
+        hostPath:
+          path: /home/bharath/agent_conversation_notes
+          type: DirectoryOrCreate
