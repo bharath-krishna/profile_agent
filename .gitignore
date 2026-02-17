@@ -55,7 +55,6 @@ agent/.venv/
 
 # generated files
 agent/generate_profile_pdf.py
-Bharath_Krishna_Profile.pdf
 
 # notes (manual edits)
 linkedin_post.md
