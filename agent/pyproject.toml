@@ -17,4 +17,5 @@ dependencies = [
     "langfuse==3.10.5",
     "openinference-instrumentation-google-adk>=0.1.7",
     "litellm>=1.80.9",
+    "reportlab>=4.4.10",
 ]
