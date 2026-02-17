@@ -58,3 +58,4 @@ agent/.venv/
 # Kubernetes secrets
 k8s/base/secret.yaml
 k8s/overlays/*/secret.yaml
+conversation_notes/

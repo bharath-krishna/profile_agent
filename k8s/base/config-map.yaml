@@ -15,8 +15,8 @@ data:
   # USE_LITELLM: "false"
   # MODEL_NAME: "gemini-2.5-flash"
   USE_LITELLM: "true"
-  MODEL_NAME: "openai/model"
-  OPENAI_API_BASE: "https://vllm.krishb.in/v1"
+  MODEL_NAME: "openai/qwen3-coder-next:q4_K_M"
+  OPENAI_API_BASE: "https://ollama.krishb.in/v1"
   OPENAI_API_KEY: "dummy"
   OPIK_URL_OVERRIDE: "https://opik.krishb.in/api"
 

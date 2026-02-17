@@ -365,11 +365,11 @@ export default function ProfilePage() {
                   </div>
                   <span>+1-857-437-9316</span>
                 </a>
-                <a href="https://krishb.in" target="_blank" className="flex items-center gap-3 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-lg -ml-2">
+                <a href="https://profile.krishb.in" target="_blank" className="flex items-center gap-3 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-lg -ml-2">
                   <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
                     <Globe size={16} />
                   </div>
-                  <span>krishb.in</span>
+                  <span>profile.krishb.in</span>
                 </a>
                 <div className="flex items-center gap-3 p-2 -ml-2">
                   <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">

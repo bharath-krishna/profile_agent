@@ -217,7 +217,7 @@ The complete profile injected into the system prompt includes:
 **Contact Information:**
 - Phones: +1 8574379316, +91 7760779000
 - Email: bharath.chakravarthi@gmail.com
-- Website: https://krishb.in
+- Website: https://profile.krishb.in
 
 **Work Experience:** 7 positions from Intern at IBAB (2010) to Senior Software Engineer at Rakuten USA (present)
 

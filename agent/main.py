@@ -50,10 +50,12 @@ class ProfileState(BaseModel):
 
 def add_conversation_note(
     tool_context: ToolContext,
-    note: str
+    note: str,
+    source: str = "Unknown"
 ) -> Dict[str, str]:
     """
     Add a note about the current conversation for future reference.
+    Writes to individual files with timestamp in agent/notes/ directory.
 
     Use this to track:
     - Key recruiter questions or concerns
@@ -63,25 +65,47 @@ def add_conversation_note(
 
     Args:
         note: A concise note about the conversation
+        source: The name of the person (e.g., recruiter) or source of the note
 
     Returns:
         Dict indicating success and the note added
     """
     try:
+        from datetime import datetime
+        import os
+        
+        # Ensure notes directory exists
+        notes_dir = os.path.join(os.environ.get("NOTES_DIR", os.path.dirname(os.path.abspath(__file__))), "notes")
+        os.makedirs(notes_dir, exist_ok=True)
+        
+        # Generate timestamp and filename
+        timestamp = datetime.now()
+        date_str = timestamp.strftime("%Y-%m-%d")
+        time_str = timestamp.strftime("%H-%M-%S")
+        filename = f"{date_str}_{time_str}_note.md"
+        filepath = os.path.join(notes_dir, filename)
+        
+        # Create note content with timestamp
+        note_content = f"# Conversation Note\n\n## {timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n\n{note}\n \n*Source: {source}*"
+        
+        # Write to file
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(note_content)
+        
+        # Also add to context list for the agent
         context_list = tool_context.state.get("conversation_context", [])
         if context_list is None:
             context_list = []
-
-        # Add timestamped note
-        from datetime import datetime
-        timestamped_note = f"[{datetime.now().strftime('%Y-%m-%d %H:%M')}] {note}"
+        
+        timestamped_note = f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {note}"
         context_list.append(timestamped_note)
-
+        
         tool_context.state["conversation_context"] = context_list
-
+        
         return {
             "status": "success",
-            "message": f"Note added: {note}"
+            "message": f"Note added: {note}",
+            "filepath": filepath
         }
     except Exception as e:
         return {
@@ -183,7 +207,7 @@ def before_model_modifier(
 ## Contact Information
 - Phones: +1 8574379316, +91 7760779000
 - Email: bharath.chakravarthi@gmail.com
-- Website: https://krishb.in
+- Website: https://profile.krishb.in
 
 ## Professional Summary
 Full-stack engineer with 15 years of professional experience (2010-2025). Proven expertise in building scalable AI/ML platforms, high-availability services, and DevOps pipelines. Strong background in designing LLM inference pipelines, managing Kubernetes clusters, and automating infrastructure with Terraform & Ansible. Deep knowledge of Python (15 years) and Go (7 years).
