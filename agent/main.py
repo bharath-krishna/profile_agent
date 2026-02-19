@@ -48,6 +48,89 @@ class ProfileState(BaseModel):
     )
 
 
+def recruit(
+    tool_context: ToolContext,
+    recruiterName: str,
+    recruiterEmail: str,
+    employer: str,
+    jobOfferOrInterest: str,
+    notes: Optional[str] = None
+) -> Dict[str, any]:
+    """
+    Capture recruiter outreach information with human approval workflow.
+    
+    Saves recruiter details to a JSON file in the conversation_notes directory
+    and signals that human approval is needed before responding to recruiter.
+    
+    Args:
+        recruiterName: Name of the recruiter
+        recruiterEmail: Email address of the recruiter
+        employer: Company or employer name
+        jobOfferOrInterest: Description of job opportunity or interest
+        notes: Optional additional notes
+        
+    Returns:
+        Dict with status and approval workflow info
+    """
+    try:
+        from datetime import datetime
+        import os
+        import json
+        
+        # Ensure notes directory exists
+        notes_dir = os.path.join(os.environ.get("NOTES_DIR", os.path.dirname(os.path.abspath(__file__))), "notes")
+        os.makedirs(notes_dir, exist_ok=True)
+        
+        # Generate timestamp and filename
+        timestamp = datetime.now()
+        date_str = timestamp.strftime("%Y-%m-%d")
+        time_str = timestamp.strftime("%H-%M-%S")
+        filename = f"recruiter_{date_str}_{time_str}.json"
+        filepath = os.path.join(notes_dir, filename)
+        
+        # Create recruiter data structure
+        recruiter_data = {
+            "timestamp": timestamp.isoformat(),
+            "recruiterName": recruiterName,
+            "recruiterEmail": recruiterEmail,
+            "employer": employer,
+            "jobOfferOrInterest": jobOfferOrInterest,
+            "notes": notes or "",
+            "status": "awaiting_human_review",
+            "processedBy": None,
+            "processedAt": None,
+            "decision": None
+        }
+        
+        # Write to JSON file
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(recruiter_data, f, indent=2, ensure_ascii=False)
+        
+        # Add to conversation context
+        context_list = tool_context.state.get("conversation_context", [])
+        if context_list is None:
+            context_list = []
+        
+        context_entry = f"[RECRUITER] {timestamp.strftime('%Y-%m-%d %H:%M:%S')} - {recruiterName} from {employer} has a job opportunity: {jobOfferOrInterest}. Notes: {notes or 'None'}. Awaiting human review."
+        context_list.append(context_entry)
+        tool_context.state["conversation_context"] = context_list
+        
+        return {
+            "status": "awaiting_human_review",
+            "message": f"Recruiter data from {recruiterName} ({employer}) has been collected. Waiting for human approval before responding.",
+            "saved_file": filename,
+            "needs_human_approval": True,
+            "recruiterName": recruiterName,
+            "employer": employer
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error processing recruiter information: {str(e)}",
+            "needs_human_approval": False
+        }
+
+
 def add_conversation_note(
     tool_context: ToolContext,
     note: str,
@@ -330,6 +413,7 @@ Full-stack engineer with 15 years of professional experience (2010-2025). Proven
 ## Conversation Notes
 {conversation_notes}
 
+Whenever a recruiter shares information about a job opportunity, use the `recruiterOutreach` tool to capture their details and the job information.
 ---
 You are Bharath's Personal Assistant. Use this profile information to answer questions about Bharath's background, experience, and skills. When discussing with recruiters, advocate on his behalf by highlighting relevant achievements and experience."""
 
@@ -498,9 +582,19 @@ Examples of when to use the get_weather tool:
 - "What's the weather today in Tokyo?" → Use the tool with the location "Tokyo"
 - "Whats the weather right now" → Use the location "Everywhere ever in the whole wide world"
 - "Is it raining in London?" → Use the tool with the location "London"
-Keep your responses short and professional, likve a conversation. With in three sentences maximum.
+
+RECRUITER OUTREACH WORKFLOW:
+When a recruiter contacts you about job opportunities:
+1. Use the `recruit` tool FIRST to capture: name, email, employer, and job description
+2. Do NOT make promises or commitments - inform they'll hear back from Bharath
+3. After collection, wait for human approval from the UI
+4. If approved: thank them. If rejected: politely decline
+5. Do NOT discuss salary/benefits - all decisions are Bharath's
+
+Keep your responses short and professional, like a conversation. Within three sentences maximum.
 """,
     tools=[
+        recruit,
         add_conversation_note,
         # get_weather,
         # get_person_card

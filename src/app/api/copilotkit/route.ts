@@ -14,7 +14,7 @@ const serviceAdapter = new ExperimentalEmptyAdapter();
 //    to setup the connection with the ADK agent.
 const runtime = new CopilotRuntime({
   agents: {
-    // Our FastAPI endpoint URL
+    // Our FastAPI endpoint URL (agent runs on port 8001 - FastAPI server, not ADK web)
     "BharathAssistant": new HttpAgent({url: "http://localhost:8001/"}),
   } as any
 });
