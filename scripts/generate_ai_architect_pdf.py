@@ -1,4 +1,4 @@
-"""Generate a professional PDF resume for Bharath Krishna."""
+"""Generate a professional PDF resume for Bharath Krishna – AI Architect profile."""
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -35,7 +35,6 @@ style_bullet = ParagraphStyle("Bullet", fontSize=9, leading=13, textColor=MED_GR
 style_skill_cat = ParagraphStyle("SkillCat", fontSize=9, leading=13, textColor=NAVY, fontName="Helvetica-Bold")
 style_skill_val = ParagraphStyle("SkillVal", fontSize=9, leading=13, textColor=MED_GRAY, fontName="Helvetica")
 style_summary = ParagraphStyle("Summary", fontSize=10, leading=15, textColor=DARK_GRAY, fontName="Helvetica", spaceAfter=6)
-style_emp_id = ParagraphStyle("EmpId", fontSize=9, leading=13, textColor=LIGHT_GRAY, fontName="Helvetica", alignment=TA_LEFT)
 
 
 def section_header(text):
@@ -47,7 +46,7 @@ def section_header(text):
 
 def build_header():
     name = Paragraph("BHARATH KRISHNA", style_name)
-    title = Paragraph("Full Stack Engineer &amp; AgenticAI Specialist", style_title)
+    title = Paragraph("AI Architect &amp; Full Stack Engineer", style_title)
     contact_left = Paragraph('<font size="9">+1-857-437-9316&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;bharath.chakravarthi@gmail.com</font>', style_contact)
     contact_right = Paragraph('<font size="9">profile.krishb.in&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;California, USA</font>', style_contact)
 
@@ -69,7 +68,7 @@ def build_header():
 
 
 def build_competencies():
-    pills = ["LLMOps", "DevOps", "AgenticAI", "HA Systems", "Agile/Scrum"]
+    pills = ["AI Architecture", "LLMOps", "MLOps", "AgenticAI", "Kubernetes"]
     cells = [Paragraph(f'<font color="{DARK_BLUE.hexval()}" size="9"><b>{p}</b></font>',
              ParagraphStyle("pill", alignment=TA_CENTER, leading=14)) for p in pills]
     t = Table([cells], colWidths=[1.4 * inch] * len(pills))
@@ -85,10 +84,11 @@ def build_competencies():
 
 def build_skills():
     skills = [
+        ("AI / ML", "PyTorch, LLM Deployment, AgenticAI Protocols, NLP, Model Serving"),
         ("Programming", "Python (15 yrs), Golang (7 yrs)"),
+        ("MLOps & Infra", "Kubernetes (CKA), Docker, Ansible, Terraform, GCP"),
+        ("Data & Backend", "PostgreSQL, MongoDB, FastAPI, Gin Gonic, Apache Airflow"),
         ("Frontend", "React, NextJS, ChakraUI"),
-        ("Infrastructure", "Kubernetes (CKA), Ansible, Terraform, GCP, Docker"),
-        ("Backend", "FastAPI, Gin Gonic, PostgreSQL, MongoDB"),
     ]
     rows = [[Paragraph(cat, style_skill_cat), Paragraph(val, style_skill_val)] for cat, val in skills]
     t = Table(rows, colWidths=[1.4 * inch, 5.6 * inch])
@@ -121,63 +121,70 @@ def build_pdf(output_path):
     story = []
 
     story.append(build_header())
+    story.append(Spacer(1, 12))
 
+    # Professional Summary – tailored for AI Architect
     story.append(section_header("Professional Summary"))
     story.append(Paragraph(
-        "Full stack engineer with 15+ years of experience building AgenticAI solutions "
-        "and managing HPC clusters for ML/LLM operations. Expertise spans LLMOps pipelines, "
-        "model serving infrastructure, and API development with proven Kubernetes and "
-        "Infrastructure-as-Code competency.", style_summary))
+        "AI-focused architect and full stack engineer with 15+ years of experience designing and deploying "
+        "enterprise-scale AI/ML systems. Currently leading AgenticAI solution development and LLM deployment "
+        "infrastructure on high-performance Kubernetes clusters. Deep expertise in MLOps pipelines, model "
+        "serving LLMs via vllm, sglang, and end-to-end AI solution architecture spanning GenAI and AgenticAI "
+        "frameworks and protocols, and production model monitoring.", style_summary))
     story.append(Spacer(1, 4))
     story.append(build_competencies())
     story.append(Spacer(1, 12))
 
+    # Technical Skills – AI/ML first
     story.append(section_header("Technical Skills"))
     story.append(build_skills())
     story.append(Spacer(1, 6))
 
+    # Work Experience – bullets reframed for AI architecture
     story.append(section_header("Work Experience"))
     experiences = [
         ("Senior Software Engineer", "Rakuten USA", "May 2022 \u2013 Feb 2026", [
-            "Building AgenticAI solutions and LLM deployment management",
+            "Architecting and deploying AgenticAI solutions and LLM-based systems at enterprise scale",
             "Developing agentic applications using A2A and MCP protocols with CopilotKit",
-            "Developing UI/API/CLI tools for HPC cluster training job submission",
-            "MLOps pipeline setup and high-performance Kubernetes cluster maintenance",
-            "Infrastructure automation using Terraform/Ansible; Keycloak IAM management",
-            "Custom Kubernetes operator development and team leadership",
+            "Designing MLOps pipelines for model training, serving, and monitoring on HPC clusters",
+            "Managing high-performance Kubernetes clusters for distributed ML workloads",
+            "Developing UI/API/CLI tools for HPC cluster training job submission and orchestration",
+            "Infrastructure automation using Terraform/Ansible; model deployment lifecycle management",
+            "Custom Kubernetes operator development for AI workload scheduling; team leadership",
         ]),
         ("Application Engineer", "Rakuten, Inc. \u2014 Tokyo", "Jan 2018 \u2013 May 2022", [
-            "Infrastructure-as-Code development with Terraform/Ansible",
-            "Custom Terraform plugin and GoLang SDK development",
-            "REST API toolkit development (FastAPI/Gin) and authentication services",
-            "Load testing and test case implementation",
+            "Designed Infrastructure-as-Code solutions with Terraform/Ansible for scalable compute",
+            "Developed custom Terraform plugins and GoLang SDKs for platform automation",
+            "Built REST API toolkits (FastAPI/Gin) powering internal AI platform services",
+            "Implemented authentication services and load testing frameworks",
         ]),
         ("Application Engineer", "Rakuten India", "Sep 2014 \u2013 Dec 2018", [
-            "API development for IaaS (VMware), DNS (Nominum), and Load Balancers (BigIP)",
-            "Led 3-member team as Scrum Master",
-            "Job automation via Apache Airflow",
+            "API development for IaaS (VMware), DNS, and Load Balancer infrastructure",
+            "Led 3-member team as Scrum Master; Agile delivery of platform services",
+            "Workflow automation and job orchestration via Apache Airflow",
         ]),
         ("Associate IT Consultant", "ITC Infotech / Bosch", "Jan 2014 \u2013 Sep 2014", [
-            "SCM tools automation (MKS/ClearQuest)",
-            "PERL synchronization script development",
+            "SCM tools automation and integration (MKS/ClearQuest)",
+            "Data synchronization script development",
         ]),
         ("Software Engineer", "eHover Systems", "Apr 2013 \u2013 Jan 2014", [
-            "Cloud-based surveillance system development (AWS S3/EC2/ZoneMinder)",
-            "Web interface for surveillance data access using PHP and CodeIgniter",
+            "Cloud-based surveillance system architecture (AWS S3/EC2)",
+            "Computer vision data pipeline and web interface development",
         ]),
         ("Project Assistant", "Kuvempu University", "Apr 2011 \u2013 Apr 2013", [
-            "Perl module development for molecular dynamic simulations",
-            "SBML file analysis web application using Python/LibSBML bindings",
-            "Technologies: BioPython, BioPerl, LibSBML, Gromacs",
+            "Developed Python modules for molecular dynamic simulations and data analysis",
+            "Built SBML file analysis web application using Python/LibSBML bindings",
+            "Applied computational biology techniques: BioPython, BioPerl, Gromacs",
         ]),
         ("Software Developer Intern", "IBAB", "Sep 2010 \u2013 Feb 2011", [
             "Mammalian Gene Expression Database development",
-            "Bio-curator data web application using Perl, MySQL, JavaScript",
+            "Data curation web application using Perl, MySQL, JavaScript",
         ]),
     ]
     for title, company, date, bullets in experiences:
         story.append(build_experience_entry(title, company, date, bullets))
 
+    # Education
     story.append(section_header("Education"))
     story.append(Paragraph("<b>M.Sc in Bioinformatics</b> &mdash; Kuvempu University, Karnataka", style_body))
     story.append(Paragraph("Focus: Genomics, Drug Discovery, Protein Engineering", style_body_italic))
@@ -186,10 +193,12 @@ def build_pdf(output_path):
     story.append(Paragraph("Majors: Biotechnology, Botany, Computer Science", style_body_italic))
     story.append(Spacer(1, 10))
 
+    # Certifications
     story.append(section_header("Certifications"))
     story.append(Paragraph("\u2022&nbsp;&nbsp;Certified Kubernetes Administrator (CKA)", style_body))
     story.append(Spacer(1, 10))
 
+    # Additional
     story.append(section_header("Additional"))
     t = Table([[
         Paragraph("<b>Languages:</b> English, Hindi, Kannada, Telugu", style_body),
@@ -203,4 +212,4 @@ def build_pdf(output_path):
 
 
 if __name__ == "__main__":
-    build_pdf("/home/bharath/workspace/profile_agent/Bharath_Krishna_Profile.pdf")
+    build_pdf("/home/bharath/workspace/profile_agent/Bharath_Krishna_AI_Architect.pdf")

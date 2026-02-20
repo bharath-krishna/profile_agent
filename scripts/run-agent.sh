@@ -8,4 +8,5 @@ source .venv/bin/activate
 
 # Run the agent
 export PORT=8001
-uv run main.py
+cd ..
+uv run -m agent.main --ative

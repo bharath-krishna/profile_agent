@@ -78,6 +78,59 @@ Once deployed, the application will be available at:
 
 Make sure your DNS is configured to point `profile.krishb.in` to your ingress controller's external IP.
 
+## Profile Management
+
+### Overview
+
+Bharath's professional profile is externalized from the Python code and managed via:
+
+1. **Development**: `data/bharath_profile.md` (local markdown file)
+2. **Kubernetes**: `bharath-profile` ConfigMap (mounted at `/profiles`)
+
+### Profile Loading Strategy
+
+The agent uses intelligent fallback logic (`load_profile_from_file()` in `agent/main.py`):
+
+1. **K8s Path** (`/profiles/bharath_profile.md`): Tries first (for production)
+2. **Dev Path** (`../data/bharath_profile.md`): Falls back to local file (for development)
+3. **Embedded Default**: Uses minimal fallback profile if no file found
+
+### Updating the Profile
+
+**In Development:**
+```bash
+# Edit the profile file
+vi data/bharath_profile.md
+
+# Restart agent server to pick up changes
+npm run dev:agent
+```
+
+**In Kubernetes:**
+```bash
+# Update ConfigMap
+vi k8s/base/profile-config-map.yaml
+
+# Apply new ConfigMap
+kubectl apply -k k8s/base/
+
+# Force pod restart to reload profile
+kubectl rollout restart deployment/familyman-ui
+```
+
+### Verify Profile in Cluster
+
+```bash
+# Check ConfigMap exists
+kubectl get configmap bharath-profile
+
+# View profile content
+kubectl get configmap bharath-profile -o jsonpath='{.data.bharath_profile\.md}' | head -30
+
+# Verify mount in running pod
+kubectl exec -it <pod-name> -- cat /profiles/bharath_profile.md | head
+```
+
 ## Configuration
 
 ### Environment Variables

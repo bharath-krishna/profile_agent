@@ -40,13 +40,13 @@ This is a CopilotKit + Google ADK (Agent Development Kit) integration project th
    - FastAPI server on port 8001
    - Uses callbacks to inject Bharath's professional profile and manage state:
      - `on_before_agent`: Initialize empty conversation context
-     - `before_model_modifier`: Inject complete 15-year professional profile into system prompt
+     - `before_model_modifier`: Load and inject Bharath's professional profile into system prompt
      - `after_model_modifier`: Control agent execution flow
    - Three agent tools:
      - `add_conversation_note`: Track important points from recruiter discussions
      - `get_weather`: Demonstrate generative UI rendering (example tool)
      - `get_person_card`: Future family tree features (reserved for future use)
-   - Profile data architecture: Static profile in system prompt, dynamic conversation notes in state
+   - **Profile data architecture:** Externalized to `data/bharath_profile.md` (see below)
    - Connects to remote familyman agent on port 8003 via `RemoteA2aAgent` (currently disabled)
 
 ### Key Patterns
@@ -158,6 +158,31 @@ python agent/main.py
 - State is injected into agent's system prompt via `before_model_modifier` callback
 - Profile data is NOT in state - it's injected directly into system prompt for better performance
 
+### Profile Data Management
+
+**Location:** `data/bharath_profile.md`
+
+The profile is externalized from Python code for easy updates without code changes:
+
+**Loading Strategy (`load_profile_from_file()`):**
+1. K8s path: `/profiles/bharath_profile.md` (mounted ConfigMap in production)
+2. Dev path: `../data/bharath_profile.md` (relative to `agent/main.py`)
+3. Fallback: Embedded default profile if no file found
+
+**To Update Profile:**
+- Development: Edit `data/bharath_profile.md`, restart agent
+- Kubernetes: Edit `k8s/base/profile-config-map.yaml`, apply, restart pod
+
+**Profile Contents:**
+- Contact information (phone, email, website)
+- Professional summary (15 years experience)
+- Work experience (7 positions from 2010-present)
+- Technical skills (8 categories)
+- Education and certifications
+- Personal profile and strengths
+
+See `PROFILE_MIGRATION_SUMMARY.md` for detailed migration notes and troubleshooting.
+
 ### Agent Name Consistency
 
 The agent name **must match** between:
@@ -219,9 +244,9 @@ The complete profile injected into the system prompt includes:
 - Email: bharath.chakravarthi@gmail.com
 - Website: https://profile.krishb.in
 
-**Work Experience:** 7 positions from Intern at IBAB (2010) to Senior Software Engineer at Rakuten USA (present)
+**Work Experience:** 7 positions from Intern at IBAB (2010) to Senior Software Engineer at Rakuten USA (Feb 2026)
 
-**Technical Skills:** 8 categories including Languages (Python, Go), Frontend (React, NextJS), ML Frameworks (PyTorch, TensorRT), Infrastructure (Ansible, Terraform), Databases, CI/CD, and Cloud
+**Technical Skills:** 8 categories including Languages (Python, Go), Frontend (React, NextJS), ML/LLM Frameworks (PyTorch, Huggingface Transformers), Infrastructure (Ansible, Terraform), Databases, CI/CD, and Cloud
 
 **Education:**
 - Master of Science in Bioinformatics - Kuvempu University (Focus: Genomics, Drug Discovery, Protein Engineering)

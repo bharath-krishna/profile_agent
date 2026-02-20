@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from ag_ui_adk import ADKAgent, add_adk_fastapi_endpoint
 from dotenv import load_dotenv
@@ -24,7 +25,13 @@ from pydantic import BaseModel, Field
 from langfuse import get_client
 from openinference.instrumentation.google_adk import GoogleADKInstrumentor
 
+# Import sub-agent wrapper tools
+from .tools.agent_wrappers import compose_and_send_profile, track_conversation_note
+
 load_dotenv()
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class ProfileState(BaseModel):
@@ -47,205 +54,6 @@ class ProfileState(BaseModel):
         description="Message ID of the last response (for correlation)",
     )
 
-
-def recruit(
-    tool_context: ToolContext,
-    recruiterName: str,
-    recruiterEmail: str,
-    employer: str,
-    jobOfferOrInterest: str,
-    notes: Optional[str] = None
-) -> Dict[str, any]:
-    """
-    Capture recruiter outreach information with human approval workflow.
-    
-    Saves recruiter details to a JSON file in the conversation_notes directory
-    and signals that human approval is needed before responding to recruiter.
-    
-    Args:
-        recruiterName: Name of the recruiter
-        recruiterEmail: Email address of the recruiter
-        employer: Company or employer name
-        jobOfferOrInterest: Description of job opportunity or interest
-        notes: Optional additional notes
-        
-    Returns:
-        Dict with status and approval workflow info
-    """
-    try:
-        from datetime import datetime
-        import os
-        import json
-        
-        # Ensure notes directory exists
-        notes_dir = os.path.join(os.environ.get("NOTES_DIR", os.path.dirname(os.path.abspath(__file__))), "notes")
-        os.makedirs(notes_dir, exist_ok=True)
-        
-        # Generate timestamp and filename
-        timestamp = datetime.now()
-        date_str = timestamp.strftime("%Y-%m-%d")
-        time_str = timestamp.strftime("%H-%M-%S")
-        filename = f"recruiter_{date_str}_{time_str}.json"
-        filepath = os.path.join(notes_dir, filename)
-        
-        # Create recruiter data structure
-        recruiter_data = {
-            "timestamp": timestamp.isoformat(),
-            "recruiterName": recruiterName,
-            "recruiterEmail": recruiterEmail,
-            "employer": employer,
-            "jobOfferOrInterest": jobOfferOrInterest,
-            "notes": notes or "",
-            "status": "awaiting_human_review",
-            "processedBy": None,
-            "processedAt": None,
-            "decision": None
-        }
-        
-        # Write to JSON file
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(recruiter_data, f, indent=2, ensure_ascii=False)
-        
-        # Add to conversation context
-        context_list = tool_context.state.get("conversation_context", [])
-        if context_list is None:
-            context_list = []
-        
-        context_entry = f"[RECRUITER] {timestamp.strftime('%Y-%m-%d %H:%M:%S')} - {recruiterName} from {employer} has a job opportunity: {jobOfferOrInterest}. Notes: {notes or 'None'}. Awaiting human review."
-        context_list.append(context_entry)
-        tool_context.state["conversation_context"] = context_list
-        
-        return {
-            "status": "awaiting_human_review",
-            "message": f"Recruiter data from {recruiterName} ({employer}) has been collected. Waiting for human approval before responding.",
-            "saved_file": filename,
-            "needs_human_approval": True,
-            "recruiterName": recruiterName,
-            "employer": employer
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Error processing recruiter information: {str(e)}",
-            "needs_human_approval": False
-        }
-
-
-def add_conversation_note(
-    tool_context: ToolContext,
-    note: str,
-    source: str = "Unknown"
-) -> Dict[str, str]:
-    """
-    Add a note about the current conversation for future reference.
-    Writes to individual files with timestamp in agent/notes/ directory.
-
-    Use this to track:
-    - Key recruiter questions or concerns
-    - Specific job requirements discussed
-    - Follow-up items or next steps
-    - Important discussion points
-
-    Args:
-        note: A concise note about the conversation
-        source: The name of the person (e.g., recruiter) or source of the note
-
-    Returns:
-        Dict indicating success and the note added
-    """
-    try:
-        from datetime import datetime
-        import os
-        
-        # Ensure notes directory exists
-        notes_dir = os.path.join(os.environ.get("NOTES_DIR", os.path.dirname(os.path.abspath(__file__))), "notes")
-        os.makedirs(notes_dir, exist_ok=True)
-        
-        # Generate timestamp and filename
-        timestamp = datetime.now()
-        date_str = timestamp.strftime("%Y-%m-%d")
-        time_str = timestamp.strftime("%H-%M-%S")
-        filename = f"{date_str}_{time_str}_note.md"
-        filepath = os.path.join(notes_dir, filename)
-        
-        # Create note content with timestamp
-        note_content = f"# Conversation Note\n\n## {timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n\n{note}\n \n*Source: {source}*"
-        
-        # Write to file
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(note_content)
-        
-        # Also add to context list for the agent
-        context_list = tool_context.state.get("conversation_context", [])
-        if context_list is None:
-            context_list = []
-        
-        timestamped_note = f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {note}"
-        context_list.append(timestamped_note)
-        
-        tool_context.state["conversation_context"] = context_list
-        
-        return {
-            "status": "success",
-            "message": f"Note added: {note}",
-            "filepath": filepath
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Error adding note: {str(e)}"
-        }
-
-
-# def get_weather(tool_context: ToolContext, location: str) -> Dict[str, str]:
-#     """Get the weather for a given location. Ensure location is fully spelled out."""
-#     return {"status": "success", "message": f"The weather in {location} is sunny."}
-
-# def get_person_card(
-#     tool_context: ToolContext,
-#     firstName: str,
-#     lastName: str,
-#     name: str,
-#     age: int,
-#     gender: str,
-#     email: str,
-#     relationship: str,
-#     exploration_depth: int,
-#     is_complete: bool,
-#     last_updated: str,
-# ) -> Dict:
-#     """
-#     Get details about a person from the family tree.
-
-#     Args:
-#         firstName: Person's first name
-#         lastName: Person's last name
-#         name: Full name of the person
-#         age: Person's age
-#         gender: Person's gender
-#         email: Person's email address
-#         relationship: Relationship type (e.g., FATHER_OF, MOTHER_OF)
-#         exploration_depth: Depth of exploration in the family tree
-#         is_complete: Whether the person's data is complete
-#         last_updated: Last update timestamp
-
-#     Returns:
-#         Dictionary with person details
-#     """
-#     return {
-#         "firstName": firstName,
-#         "lastName": lastName,
-#         "name": name,
-#         "age": age,
-#         "gender": gender,
-#         "email": email,
-#         "relationship": relationship,
-#         "exploration_depth": exploration_depth,
-#         "is_complete": is_complete,
-#         "last_updated": last_updated,
-#     }
-
-
 def on_before_agent(callback_context: CallbackContext):
     """Initialize conversation context and thinking fields if they don't exist."""
 
@@ -267,6 +75,47 @@ def on_before_agent(callback_context: CallbackContext):
 
 # --- Define the Callback Function ---
 #  modifying the agent's system prompt to include Bharath's complete profile
+def load_profile_from_file() -> str:
+    """Load Bharath's professional profile from file.
+
+    Supports multiple paths:
+    - K8s: /profiles/bharath_profile.md (mounted ConfigMap)
+    - Development: ../data/bharath_profile.md (relative to agent/)
+    - Fallback: embedded default profile
+    """
+    import os
+
+    # Try k8s mounted profile first
+    k8s_path = "/profiles/bharath_profile.md"
+    if os.path.exists(k8s_path):
+        try:
+            with open(k8s_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except Exception as e:
+            logger.warning(f"Failed to load profile from k8s path {k8s_path}: {e}")
+
+    # Try development path
+    dev_path = os.path.join(os.path.dirname(__file__), "..", "data", "bharath_profile.md")
+    if os.path.exists(dev_path):
+        try:
+            with open(dev_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except Exception as e:
+            logger.warning(f"Failed to load profile from dev path {dev_path}: {e}")
+
+    # Fallback to default embedded profile
+    logger.warning("Using embedded default profile - no external profile file found")
+    return """# BHARATH KRISHNA - PROFESSIONAL PROFILE
+
+## Contact Information
+- Phones: +1 8574379316, +91 7760779000
+- Email: bharath.chakravarthi@gmail.com
+- Website: https://profile.krishb.in
+
+## Professional Summary
+Full-stack engineer with 15 years of professional experience. Proven expertise in building scalable AI/ML platforms, high-availability services, and DevOps pipelines."""
+
+
 def before_model_modifier(
     callback_context: CallbackContext, llm_request: LlmRequest
 ) -> Optional[LlmResponse]:
@@ -284,136 +133,15 @@ def before_model_modifier(
             except Exception as e:
                 conversation_notes = f"Error serializing notes: {str(e)}"
 
+        # Load profile from file
+        profile_content = load_profile_from_file()
+
         # Build comprehensive profile context
-        profile_context = f"""# BHARATH KRISHNA - PROFESSIONAL PROFILE
-
-## Contact Information
-- Phones: +1 8574379316, +91 7760779000
-- Email: bharath.chakravarthi@gmail.com
-- Website: https://profile.krishb.in
-
-## Professional Summary
-Full-stack engineer with 15 years of professional experience (2010-2025). Proven expertise in building scalable AI/ML platforms, high-availability services, and DevOps pipelines. Strong background in designing LLM inference pipelines, managing Kubernetes clusters, and automating infrastructure with Terraform & Ansible. Deep knowledge of Python (15 years) and Go (7 years).
-
-## Work Experience (Detailed Timeline)
-
-### 1. Senior Software Engineer – Rakuten USA, California (May 2022 – Present)
-- Build AgenticAI solutions for internal services
-- Manage LLM deployments for peak usage
-- Develop UI, API & CLI tools for submitting training jobs on HPC clusters
-- Setup MLOps pipeline for model development & deployment
-- Maintain high-performance Kubernetes cluster
-- Implemented model inference platform using BentoML
-- Configured IAM via Keycloak
-- Automated infrastructure with Terraform & Ansible
-- Configured DNS & Load Balancer for HPC services
-- Developed custom K8s operators
-- Led UI developers & infrastructure engineers
-- Tech Stack: Golang, Python, Kubernetes, Ansible, Terraform, Graph DBs, AgenticAI
-
-### 2. Application Engineer – Rakuten, Inc., Tokyo (Jan 2018 – May 2022)
-- Built Infrastructure as Code with Terraform & Ansible
-- Extended Terraform with custom plugins & Go SDKs
-- Wrote pytest & Locust tests for service stability
-- Created toolkit for building/testing/deploying REST APIs (FastAPI, Gin)
-- Implemented auth services using Keycloak & Kong
-- Tech Stack: Golang, Python, Kubernetes, Ansible, Terraform, Graph DBs, AgenticAI
-
-### 3. Application Engineer – Rakuten India Enterprise Pvt. Ltd., Bengaluru (Sep 2014 – Dec 2018)
-- Built APIs for IaaS (VMware vSphere), DNS (Nominum, Infoblox) & Load Balancer (BigIP)
-- Developed batch scripts & daily Airflow jobs for auth data collection
-- Led a team of 3; acted as Scrum Master
-- Collaborated across teams for requirement gathering & service improvement
-- Tech Stack: Python, Ansible
-
-### 4. Associate IT Consultant – ITC Infotech & Robert Bosch, Bengaluru (Jan 2014 – Sep 2014)
-- Supported source-code management hotline (MKS, ClearQuest)
-- Automated support tasks with Perl scripts
-- Tech Stack: Perl
-
-### 5. Software Engineer – eHover Systems India Pvt. Ltd. (Apr 2011 – Apr 2013)
-- Developed secure cloud-based personal surveillance system (EC2, S3)
-- Created web interface (PHP, CodeIgniter) for CCTV data access
-- Tech Stack: Perl, PHP, AWS (S3, Route53, EC2), ZoneMinder
-
-### 6. Project Assistant – Kuvempu University (Sep 2010 – Feb 2011)
-- Developed Perl modules for automated molecular-dynamic simulations
-- Built web app (Python, libSBML) to analyze SBML files
-- Tech Stack: BioPython, BioPerl, LibSBML, Gromacs
-
-### 7. Intern – Software Developer – IBAB, Bengaluru (Apr 2010 – Feb 2011)
-- Built "Mammalian Gene Expression Database"
-- Developed web app (PERL, MySQL, JavaScript) for bio-curator data maintenance
-- Tech Stack: Perl, MySQL, JavaScript
-
-## Technical Skills (8 Categories)
-
-### Languages & Web
-- Python (15 years experience)
-- Go (7 years experience)
-
-### Frontend
-- React
-- NextJS
-- Chakra UI
-
-### ML Frameworks
-- ONNX
-- PyTorch
-- TensorRT
-- NVIDIA Triton
-- DeepSpeed
-- Accelerate
-
-### Infrastructure
-- Ansible
-- Terraform
-
-### Frameworks
-- FastAPI
-- Gin Gonic
-
-### Databases
-- PostgreSQL
-- MongoDB
-- Couchbase
-
-### CI/CD & Build
-- Jenkins
-- GitHub Actions
-
-### Cloud & Orchestration
-- Kubernetes (7 years experience)
-- GCP
-
-## Certifications & Recognitions
-- Certified Kubernetes Administrator (CKA) – Linux Foundation
-
-## Education
-- Bachelor's degree in Biotechnology – Kuvempu University, Karnataka (Majors: Biotechnology, Botany, Computer Science)
-- Master's in Bioinformatics – Kuvempu University, Karnataka (Focus: Genomics, Drug Discovery, Protein Engineering)
-
-## Personal Profile
-- Age: 38 years
-- Date of Birth: 28/10/1987
-- Gender: Male
-- Nationality: Indian
-- Languages Known: Kannada, English, Hindi, Telugu
-- Hobbies & Interests: Gardening and movies
-
-## Key Strengths
-- DevOps & LLM-Ops engineering
-- Deep knowledge of Python (15 years) & Go (7 years)
-- Backend service development (RESTful APIs)
-- Front-end development with React, NextJS, Chakra UI
-- Cloud services (GCP) & container orchestration
-- Agile-Scrum methodology
-- Quick learner, self-starter, team player
+        profile_context = f"""{profile_content}
 
 ## Conversation Notes
 {conversation_notes}
 
-Whenever a recruiter shares information about a job opportunity, use the `recruiterOutreach` tool to capture their details and the job information.
 ---
 You are Bharath's Personal Assistant. Use this profile information to answer questions about Bharath's background, experience, and skills. When discussing with recruiters, advocate on his behalf by highlighting relevant achievements and experience."""
 
@@ -549,8 +277,20 @@ else:
 
 
 from google.adk.planners import BuiltInPlanner
+from google.adk.tools.base_tool import BaseTool
 
+def after_tool_callback(tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext, tool_response: Dict) -> None:
+    """After tool execution, update the conversation context with the tool output."""
+    agent_name = tool_context.agent_name
+    if tool.name == "track_conversation_note":
+        context_list = tool_context.state.get("conversation_context", [])
+        if context_list is None:
+            context_list = []
 
+        # Add tool output to conversation context
+        context_entry = f"[TOOL] {tool_response}"
+        context_list.append(context_entry)
+        tool_context.state["conversation_context"] = context_list
 
 familyman_agent = Agent(
     name="BharathAssistant",
@@ -568,7 +308,7 @@ Your role:
 
 When asked about something not in the profile, politely indicate it's not available.
 
-Use the add_conversation_note tool to track important points from discussions with recruiters, such as:
+Use the track_conversation_note tool to track important points from discussions with recruiters, such as:
 - Key questions or concerns raised
 - Specific job requirements discussed
 - Follow-up items or next steps
@@ -585,23 +325,18 @@ Examples of when to use the get_weather tool:
 
 RECRUITER OUTREACH WORKFLOW:
 When a recruiter contacts you about job opportunities:
-1. Use the `recruit` tool FIRST to capture: name, email, employer, and job description
-2. Do NOT make promises or commitments - inform they'll hear back from Bharath
-3. After collection, wait for human approval from the UI
-4. If approved: thank them. If rejected: politely decline
-5. Do NOT discuss salary/benefits - all decisions are Bharath's
+1. Capture: name, email, employer, and job description
 
 Keep your responses short and professional, like a conversation. Within three sentences maximum.
 """,
     tools=[
-        recruit,
-        add_conversation_note,
-        # get_weather,
-        # get_person_card
+        track_conversation_note,
+        compose_and_send_profile,
     ],
     before_agent_callback=on_before_agent,
     before_model_callback=before_model_modifier,
     after_model_callback=simple_after_model_modifier,
+    after_tool_callback=after_tool_callback,
     # sub_agents=[familyman_agent],
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(

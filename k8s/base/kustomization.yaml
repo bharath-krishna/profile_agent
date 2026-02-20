@@ -3,6 +3,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - config-map.yaml
+  - profile-config-map.yaml
   # The secret-template.yaml is used to generate the secret.yaml file using kustomize's generator feature.
   # cp secret-template.yaml secret.yaml
   # then edit the secret.yaml file to add the actual secret data before applying the kustomization.
