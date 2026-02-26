@@ -11,8 +11,109 @@ import {
   Code, Heart, MessageSquare, AlertTriangle, RefreshCw, ChevronDown, ChevronUp
 } from "lucide-react";
 import { useHumanInTheLoop } from "@copilotkit/react-core";
+import { useRenderTool } from "@copilotkit/react-core/v2";
+
+// import { useHumanInTheLoop, ToolCallStatus } from "@copilotkit/react-core/v2";
+import { stringify } from "querystring";
 
 const INITIAL_SUMMARY = "Full stack engineer with 15+ years of experience building AgenticAI solutions and HPC clusters for LLM/ML training. Expert in LLMOps pipelines, high-availability model serving, and RESTful API development. Proven track record in Kubernetes (CKA), Infrastructure-as-Code (Terraform/Ansible), and managing software development from inception to production.";
+
+function RecruiterOutreachModal({ args, respond }: { args: Record<string, unknown>; respond: (result: Record<string, unknown>) => void }) {
+  const [message, setMessage] = useState((args?.message as string) || "");
+  const [email, setEmail] = useState((args?.email as string) || "");
+  const [company, setCompany] = useState((args?.company as string) || "");
+  const [phone, setPhone] = useState((args?.phone as string) || "");
+  const [notes, setNotes] = useState((args?.notes as string) || "");
+
+  const getValues = () => ({ message, email, company, phone, notes });
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+        <h2 className="text-2xl font-bold text-slate-800 mb-4">Recruiter Outreach</h2>
+
+        <div className="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Recruiter Message</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={3}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-y"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Company</label>
+            <input
+              type="text"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Phone</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-y"
+              placeholder="Optional notes..."
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2 flex-col">
+          <button
+            onClick={() => {
+              console.log("Confirm clicked");
+              respond({ status: "confirmed", ...getValues() });
+            }}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium transition-colors cursor-pointer"
+          >
+            ✓ Confirm & Save
+          </button>
+          <button
+            onClick={() => {
+              console.log("More info clicked");
+              respond({ status: "more_info_needed", ...getValues() });
+            }}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-medium transition-colors cursor-pointer"
+          >
+            ? Request More Info
+          </button>
+          <button
+            onClick={() => {
+              console.log("Reject clicked");
+              respond({ status: "rejected", ...getValues() });
+            }}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-medium transition-colors cursor-pointer"
+          >
+            ✗ Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
 export default function ProfilePage() {
@@ -32,131 +133,91 @@ export default function ProfilePage() {
     return `http://${host}:8001/health`;
   };
 
-  // useHumanInTheLoop({
-  //   name: "recruiterOutreach",
-  //   description: "Collect recruiter contact information",
-  //   parameters: [
-  //     {
-  //       name: "recruiterName",
-  //       type: "string",
-  //       description: "Name of the recruiter",
-  //       required: true,
-  //     },
-  //     {
-  //       name: "recruiterEmail",
-  //       type: "string",
-  //       description: "Email address of the recruiter",
-  //       required: true,
-  //     },
-  //     {
-  //       name: "employer",
-  //       type: "string",
-  //       description: "Company or employer name",
-  //       required: true,
-  //     },
-  //     {
-  //       name: "jobOfferOrInterest",
-  //       type: "string",
-  //       description: "Job opportunity or interest description",
-  //       required: true,
-  //     },
-  //     {
-  //       name: "notes",
-  //       type: "string",
-  //       description: "Additional notes (optional)",
-  //       required: false,
-  //     },
-  //   ],
-  //   render: ({ args, status, respond, result }) => {
-  //     console.log("recruit useHumanInTheLoop - status:", status, "args:", args, "respond:", !!respond);
+  useHumanInTheLoop({
+    name: "gather_job_details",
+    description: "Collect recruiter contact information",
+    parameters: [
+      {
+        name: "message",
+        type: "string",
+        description: "The recruiter's message",
+        required: true,
+      },
+      {
+        name: "email",
+        type: "string",
+        description: "Email address of the recruiter",
+        required: true,
+      },
+      {
+        name: "company",
+        type: "string",
+        description: "Company or employer name",
+        required: true,
+      },
+      {
+        name: "phone",
+        type: "string",
+        description: "Phone number of the recruiter",
+        required: true,
+      },
+      {
+        name: "notes",
+        type: "string",
+        description: "Additional notes (optional)",
+        required: false,
+      },
+    ],
+    render: ({ args, status, respond, result }) => {
+      console.log("recruit useHumanInTheLoop - status:", status, "args:", args, "respond:", !!respond);
       
-  //     // When executing: show modal with recruiter details
-  //     if (status === "executing" && respond) {
-  //       console.log("EXECUTING - showing modal");
-  //       return (
-  //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-  //           <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
-  //             <h2 className="text-2xl font-bold text-slate-800 mb-4">Recruiter Outreach</h2>
-              
-  //             <div className="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
-  //               <div>
-  //                 <p className="text-xs font-semibold text-slate-500 uppercase">Recruiter Name</p>
-  //                 <p className="text-base text-slate-800 font-medium">{args?.recruiterName || "N/A"}</p>
-  //               </div>
-  //               <div>
-  //                 <p className="text-xs font-semibold text-slate-500 uppercase">Email</p>
-  //                 <p className="text-base text-slate-800 font-medium break-all">{args?.recruiterEmail || "N/A"}</p>
-  //               </div>
-  //               <div>
-  //                 <p className="text-xs font-semibold text-slate-500 uppercase">Employer</p>
-  //                 <p className="text-base text-slate-800 font-medium">{args?.employer || "N/A"}</p>
-  //               </div>
-  //               <div>
-  //                 <p className="text-xs font-semibold text-slate-500 uppercase">Opportunity</p>
-  //                 <p className="text-base text-slate-800 font-medium">{args?.jobOfferOrInterest || "N/A"}</p>
-  //               </div>
-  //               {args?.notes && (
-  //                 <div>
-  //                   <p className="text-xs font-semibold text-slate-500 uppercase">Notes</p>
-  //                   <p className="text-base text-slate-800 font-medium break-all">{args.notes}</p>
-  //                 </div>
-  //               )}
-  //             </div>
+      // When executing: show modal with recruiter details
+      if (status === "executing" && respond) {
+        console.log("executing - showing modal");
+        return <RecruiterOutreachModal args={args as Record<string, unknown>} respond={respond} />;
+      }
 
-  //             <div className="flex gap-2 flex-col">
-  //               <button
-  //                 onClick={() => {
-  //                   console.log("Confirm clicked");
-  //                   respond({ status: "confirmed", message: "Recruiter data collected", recruiterName: args.recruiterName, employer: args.employer, recruiterEmail: args.recruiterEmail, jobOfferOrInterest: args.jobOfferOrInterest, notes: args.notes});
-  //                 }}
-  //                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium transition-colors cursor-pointer"
-  //               >
-  //                 ✓ Confirm & Save
-  //               </button>
-  //               <button
-  //                 onClick={() => {
-  //                   console.log("More info clicked");
-  //                   respond({ status: "more_info_needed" });
-  //                 }}
-  //                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-medium transition-colors cursor-pointer"
-  //               >
-  //                 ? Request More Info
-  //               </button>
-  //               <button
-  //                 onClick={() => {
-  //                   console.log("Reject clicked");
-  //                   respond({ status: "rejected" });
-  //                 }}
-  //                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-medium transition-colors cursor-pointer"
-  //               >
-  //                 ✗ Reject
-  //               </button>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       );
-  //     }
+      if (status === "inProgress") {
+        console.log("inProgress - showing processing state");
+        return (
+          <div className="p-3 bg-gray-50 rounded-lg mb-4">
+            <p className="text-base text-gray-500">Job is inProgress...</p>
+          </div>
+        );
+      }
 
-  //     // When complete: show feedback
-  //     if (status === "complete" && result) {
-  //       console.log("COMPLETE - showing feedback");
-  //       const statusText = result.status === "confirmed" ? "✓ Recruiter data saved" : 
-  //                         result.status === "rejected" ? "✗ Recruiter data rejected" :
-  //                         "? Awaiting more information";
-  //       const statusColor = result.status === "confirmed" ? "bg-green-50 border-green-500 text-green-800" :
-  //                          result.status === "rejected" ? "bg-red-50 border-red-500 text-red-800" :
-  //                          "bg-blue-50 border-blue-500 text-blue-800";
+      // When complete: show feedback
+      if (status === "complete" && result) {
+        console.log("COMPLETE and the result is :", result);
+        const statusText = result.status === "confirmed" ? "✓ Recruiter data saved" : 
+                          result.status === "rejected" ? "✗ Recruiter data rejected" :
+                          "? Awaiting more information";
+        const statusColor = result.status === "confirmed" ? "bg-green-50 border-green-500 text-green-800" :
+                           result.status === "rejected" ? "bg-red-50 border-red-500 text-red-800" :
+                           "bg-blue-50 border-blue-500 text-blue-800";
         
-  //       return (
-  //         <div className={`p-3 border-l-4 rounded-lg mb-4 ${statusColor}`}>
-  //           <p className="font-semibold">{statusText}</p>
-  //         </div>
-  //       );
-  //     }
+        return (
+          <div className={`p-4 border-l-4 rounded-lg mb-4 ${statusColor}`}>
+            <p className="font-semibold text-lg mb-2">{statusText}</p>
+            {result.company && (
+              <p className="text-sm"><span className="font-medium">Company:</span> {result.company}</p>
+            )}
+            {result.email && (
+              <p className="text-sm"><span className="font-medium">Email:</span> {result.email}</p>
+            )}
+            {result.phone && (
+              <p className="text-sm"><span className="font-medium">Phone:</span> {result.phone}</p>
+            )}
+            {result.notes && (
+              <p className="text-sm mt-2 italic">{result.notes}</p>
+            )}
+          </div>
+        );
+      }
 
-  //     return null;
-  //   },
-  // });
+      return null;
+    },
+  });
 
   // Health check on mount and periodically
   useEffect(() => {
@@ -206,11 +267,6 @@ export default function ProfilePage() {
       setLlmError('Cannot connect to agent service');
     }
   };
-
-  const { state: agentState } = useCoAgent<AgentState>({
-    name: "BharathAssistant",
-    initialState: { conversation_context: [] }
-  });
 
   useCopilotReadable({
     description: "The professional summary displayed on the profile page. Use this to understand Bharath's background.",
@@ -311,18 +367,50 @@ export default function ProfilePage() {
 
   // Generative UI: Render conversation notes
   useRenderToolCall({
-    name: "track_conversation_note",
-    description: "Add a note about the current conversation",
+    name: "save_recruiter_info",
+    description: "Save recruiter information and display it in the UI",
     parameters: [],
     render: ({ args, status }: any) => {
+      console.log("Rendering save_recruiter_info with status:", status, "and args:", args);
       if (status === "complete") {
         return (
-          <div className="p-3 bg-green-50 border-l-4 border-green-500 rounded-lg mb-4">
-            <div className="flex items-start gap-2">
-              <CheckCircle size={18} className="text-green-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-base font-semibold text-green-800">Task Completed</p>
-                <p className="text-base text-gray-700 mt-1">{args.task}</p>
+          <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg mb-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-base font-semibold text-green-800 mb-3">Recruiter Information Gathered</p>
+                <div className="space-y-2 bg-white rounded p-3 border border-green-200">
+                  {args?.message && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Message</p>
+                      <p className="text-sm text-slate-800">{args.message}</p>
+                    </div>
+                  )}
+                  {args?.company && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Company</p>
+                      <p className="text-sm text-slate-800">{args.company}</p>
+                    </div>
+                  )}
+                  {args?.email && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Email</p>
+                      <p className="text-sm text-slate-800 break-all">{args.email}</p>
+                    </div>
+                  )}
+                  {args?.phone && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Phone</p>
+                      <p className="text-sm text-slate-800">{args.phone}</p>
+                    </div>
+                  )}
+                  {args?.notes && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Notes</p>
+                      <p className="text-sm text-slate-800">{args.notes}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -330,16 +418,16 @@ export default function ProfilePage() {
       }
       return (
         <div className="p-3 bg-gray-50 rounded-lg mb-4">
-          <p className="text-base text-gray-500">Adding note...</p>
+          <p className="text-base text-gray-500">Gathering recruiter information...</p>
         </div>
       );
     },
   });
-  
+
   // Generative UI: Render recruit tool completion
   // useRenderToolCall({
   //   name: "save_recruiter_info",
-  //   description: "Capture recruiter outreach",
+  //   description: "Gather recruiter outreach",
   //   parameters: [],
   //   render: ({ args, status }: any) => {
   //     if (status === "complete") {
@@ -438,7 +526,11 @@ export default function ProfilePage() {
           },
           {
             title: "Recruiter Contact",
-            message: "Hi I'm a recruiter reaching out to bharath to offer a job role at meta. Its a senior engineer at AI LLM project. My email clara@meta.com.",
+            message: "Hi I'm a recruiter reaching out to bharath to offer a job role at meta. Its a senior engineer at AI LLM project. My email clara@meta.com. Schedule a meeting with him to discuss this opportunity.",
+          },
+          {
+            title: "Recruiter Contact with Notes",
+            message: "Hi, I’m Clara, a recruiter at Meta. I’d like to reach out to Bharath Krishna for a Senior Engineer role on our AI/LLM team.\n\n📧 Email: clara@meta.com\n📞 Phone: +1-2233998877\n\nOur team is building next-generation LLM infrastructure — including inference optimization, model orchestration, and scalable MLOps pipelines — and Bharath’s background (especially his work with Kubernetes, BentoML, Terraform, and LLM deployments at Rakuten) looks highly relevant.\n\nPlease schedule a brief intro call at the earliest possible time — I’m very interested and want to move quickly.\n\nThanks in advance!\n— Clara"
           }
         ]}
       >
@@ -644,8 +736,8 @@ export default function ProfilePage() {
                     company="@ Rakuten, Inc. Tokyo"
                     date="Jan 2018 - May 2022"
                     details={[
-                      "Built IaC using Terraform/Ansible; wrote custom Terraform plugins & GoLang SDKs.",
-                      "Developed REST API toolkits (FastAPI/Gin) and Auth services (Keycloak/Kong).",
+                      "Built IaC using Terraform/Ansible; wrote custom Terraform providers & GoLang SDKs.",
+                      "Developed REST API toolkits (FastAPI/Cobra) and Auth services (Keycloak/Kong).",
                       "Conducted load testing (Locust) and wrote test cases (Pytest)."
                     ]}
                     onAsk={handleAsk}

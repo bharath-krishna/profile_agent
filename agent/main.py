@@ -26,7 +26,7 @@ from langfuse import get_client
 from openinference.instrumentation.google_adk import GoogleADKInstrumentor
 
 # Import sub-agent wrapper tools
-from .tools.agent_wrappers import compose_and_send_profile, track_conversation_note
+from .tools.agent_wrappers import save_recruiter_info, gather_job_details
 
 load_dotenv()
 
@@ -111,6 +111,8 @@ def load_profile_from_file() -> str:
 - Phones: +1 8574379316, +91 7760779000
 - Email: bharath.chakravarthi@gmail.com
 - Website: https://profile.krishb.in
+- LinkedIn: https://www.linkedin.com/in/bharath-krishna-652a7733/
+- GitHub: https://github.com/bharath-krishna
 
 ## Professional Summary
 Full-stack engineer with 15 years of professional experience. Proven expertise in building scalable AI/ML platforms, high-availability services, and DevOps pipelines."""
@@ -279,18 +281,18 @@ else:
 from google.adk.planners import BuiltInPlanner
 from google.adk.tools.base_tool import BaseTool
 
-def after_tool_callback(tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext, tool_response: Dict) -> None:
-    """After tool execution, update the conversation context with the tool output."""
-    agent_name = tool_context.agent_name
-    if tool.name == "track_conversation_note":
-        context_list = tool_context.state.get("conversation_context", [])
-        if context_list is None:
-            context_list = []
+# def after_tool_callback(tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext, tool_response: Dict) -> None:
+#     """After tool execution, update the conversation context with the tool output."""
+#     agent_name = tool_context.agent_name
+#     if tool.name == "save_recruiter_info":
+#         context_list = tool_context.state.get("conversation_context", [])
+#         if context_list is None:
+#             context_list = []
 
-        # Add tool output to conversation context
-        context_entry = f"[TOOL] {tool_response}"
-        context_list.append(context_entry)
-        tool_context.state["conversation_context"] = context_list
+#         # Add tool output to conversation context
+#         context_entry = f"[TOOL] {tool_response}"
+#         context_list.append(context_entry)
+#         tool_context.state["conversation_context"] = context_list
 
 familyman_agent = Agent(
     name="BharathAssistant",
@@ -308,7 +310,7 @@ Your role:
 
 When asked about something not in the profile, politely indicate it's not available.
 
-Use the track_conversation_note tool to track important points from discussions with recruiters, such as:
+Use the tools to track important points from discussions with recruiters, such as:
 - Key questions or concerns raised
 - Specific job requirements discussed
 - Follow-up items or next steps
@@ -325,22 +327,22 @@ Examples of when to use the get_weather tool:
 
 RECRUITER OUTREACH WORKFLOW:
 When a recruiter contacts you about job opportunities:
-1. Capture: name, email, employer, and job description
+1. Gather: name, email, employer, job description and any other relevant details from the recruiter.
 
 Keep your responses short and professional, like a conversation. Within three sentences maximum.
 """,
     tools=[
-        track_conversation_note,
-        compose_and_send_profile,
+        save_recruiter_info,
+        # gather_job_details
     ],
     before_agent_callback=on_before_agent,
     before_model_callback=before_model_modifier,
     after_model_callback=simple_after_model_modifier,
-    after_tool_callback=after_tool_callback,
+    # after_tool_callback=after_tool_callback,
     # sub_agents=[familyman_agent],
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
-            include_thoughts=False,  # capture intermediate reasoning
+            include_thoughts=False,  # gather intermediate reasoning
             thinking_budget=0        # tokens allocated for planning
         )
     )

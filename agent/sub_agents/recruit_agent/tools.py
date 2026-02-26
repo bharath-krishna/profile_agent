@@ -3,14 +3,15 @@
 import logging
 from typing import Dict
 from google.adk.tools import ToolContext
+
+from agent.sub_agents.models.agent_inputs import RecruitAgentInput
     
 logger = logging.getLogger(__name__)
 
 
-def save_conversation_note(
+def save_recruiter_info(
     tool_context: ToolContext,
-    note: str,
-    source: str = "Unknown"
+    kwargs: RecruitAgentInput
 ) -> Dict[str, str]:
     """Save a timestamped conversation note to file and state.
 
@@ -40,7 +41,7 @@ def save_conversation_note(
         )
         os.makedirs(notes_dir, exist_ok=True)
 
-        logger.info(f"Saving conversation note: {note} (source: {source}) to {notes_dir}")
+        logger.info(f"Saving conversation note: {kwargs.message} (source: {kwargs.email}) to {notes_dir}")
 
         # Generate timestamp and filename
         timestamp = datetime.now()
@@ -50,25 +51,25 @@ def save_conversation_note(
         filepath = os.path.join(notes_dir, filename)
 
         # Create note content with timestamp
-        note_content = f"# Conversation Note\n\n## {timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n\n{note}\n \n*Source: {source}*"
+        note_content = f"# Conversation Note\n\n## {timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n\n{kwargs.message}\n \n*Source: {kwargs.email}* \n\n *Company: {kwargs.company}* \n\n *Phone: {kwargs.phone}* \n\n *Additional Notes: {kwargs.notes}*"
 
         # Write to file
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(note_content)
 
         # Also add to context list for the agent
-        context_list = tool_context.state.get("conversation_context", [])
-        if context_list is None:
-            context_list = []
+        # context_list = tool_context.state.get("conversation_context", [])
+        # if context_list is None:
+        #     context_list = []
 
-        timestamped_note = f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {note}"
-        context_list.append(timestamped_note)
+        # timestamped_note = f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] Message: {kwargs.message} (Source: {kwargs.email}, Company: {kwargs.company}, Phone: {kwargs.phone}, Additional Notes: {kwargs.notes})"
+        # context_list.append(timestamped_note)
 
-        tool_context.state["conversation_context"] = context_list
+        # tool_context.state["conversation_context"] = context_list
 
         return {
             "status": "success",
-            "message": f"Note added: {note}",
+            "message": f"Note added: {kwargs.message}",
             "filepath": filepath,
             "timestamp": timestamp.isoformat()
         }

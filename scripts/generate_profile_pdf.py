@@ -4,7 +4,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.enums import TA_LEFT, TA_CENTER
+from reportlab.lib.enums import TA_LEFT
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
     HRFlowable, KeepTogether
@@ -12,13 +12,13 @@ from reportlab.platypus import (
 
 
 # Colors
-NAVY = HexColor("#1B2A4A")
-DARK_BLUE = HexColor("#2C3E6B")
-ACCENT = HexColor("#3B82F6")
-PILL_BG = HexColor("#EEF2FF")
-DARK_GRAY = HexColor("#333333")
-MED_GRAY = HexColor("#555555")
-LIGHT_GRAY = HexColor("#888888")
+NAVY = HexColor("#4A6FA5")
+DARK_BLUE = HexColor("#5B7DB8")
+ACCENT = HexColor("#60A5FA")
+PILL_BG = HexColor("#F0F4FF")
+DARK_GRAY = HexColor("#4A4A4A")
+MED_GRAY = HexColor("#6B6B6B")
+LIGHT_GRAY = HexColor("#9CA3AF")
 WHITE = HexColor("#FFFFFF")
 
 # Styles
@@ -49,7 +49,7 @@ def build_header():
     name = Paragraph("BHARATH KRISHNA", style_name)
     title = Paragraph("Full Stack Engineer &amp; AgenticAI Specialist", style_title)
     contact_left = Paragraph('<font size="9">+1-857-437-9316&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;bharath.chakravarthi@gmail.com</font>', style_contact)
-    contact_right = Paragraph('<font size="9">profile.krishb.in&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;California, USA</font>', style_contact)
+    contact_right = Paragraph('<font size="9">https://profile.krishb.in&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;California, USA</font>', style_contact)
 
     inner = Table([[name], [title], [Spacer(1, 4)], [contact_left], [contact_right]], colWidths=["100%"])
     inner.setStyle(TableStyle([
@@ -69,16 +69,36 @@ def build_header():
 
 
 def build_competencies():
-    pills = ["LLMOps", "DevOps", "AgenticAI", "HA Systems", "Agile/Scrum"]
-    cells = [Paragraph(f'<font color="{DARK_BLUE.hexval()}" size="9"><b>{p}</b></font>',
-             ParagraphStyle("pill", alignment=TA_CENTER, leading=14)) for p in pills]
-    t = Table([cells], colWidths=[1.4 * inch] * len(pills))
+    style_comp = ParagraphStyle("Competency", fontSize=9, leading=13, textColor=DARK_GRAY, fontName="Helvetica")
+    items = [
+        "LLMOps & DevOps Pipelines",
+        "AgenticAI (A2A, MCP, n8n)",
+        "GPU Cluster Administration",
+        "Kubernetes (CKA certified)",
+        "Infrastructure-as-Code",
+        "REST API Development",
+        "Agile / Scrum Leadership",
+        "Full Stack (React + FastAPI)",
+        "Team Leadership & Mentoring",
+    ]
+    # Arrange as 3 columns x 4 rows
+    cols = 3
+    rows = []
+    for i in range(0, len(items), cols):
+        row = []
+        for j in range(cols):
+            idx = i + j
+            if idx < len(items):
+                row.append(Paragraph(f"\u2022&nbsp;&nbsp;{items[idx]}", style_comp))
+            else:
+                row.append(Paragraph("", style_comp))
+        rows.append(row)
+    col_width = 7.0 * inch / cols
+    t = Table(rows, colWidths=[col_width] * cols)
     t.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), PILL_BG),
-        ("ALIGN", (0, 0), (-1, -1), "CENTER"), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-        ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-        ("ROUNDEDCORNERS", (0, 0), (-1, -1), [4, 4, 4, 4]),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4), ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
     ]))
     return t
 
@@ -130,20 +150,22 @@ def build_pdf(output_path):
         "Infrastructure-as-Code competency.", style_summary))
     story.append(Spacer(1, 4))
     story.append(build_competencies())
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 4))
 
     story.append(section_header("Technical Skills"))
     story.append(build_skills())
-    story.append(Spacer(1, 6))
+    story.append(Spacer(1, 3))
 
     story.append(section_header("Work Experience"))
     experiences = [
         ("Senior Software Engineer", "Rakuten USA", "May 2022 \u2013 Feb 2026", [
-            "Building AgenticAI solutions and LLM deployment management",
-            "Developing agentic applications using A2A and MCP protocols with CopilotKit",
+            "Building AgenticAI apps and workflows using n8n, A2A and MCP protocols with CopilotKit",
+            "Managing storage and compute at on-prem and public cloud infrastructures",
+            "GPU Cluster administration and optimization for LLM training and inferencing workloads",
+            "Deploying LLMs for inferencing via vllm, sglang and hyperparameter tuning for resiliency",
             "Developing UI/API/CLI tools for HPC cluster training job submission",
-            "MLOps pipeline setup and high-performance Kubernetes cluster maintenance",
-            "Infrastructure automation using Terraform/Ansible; Keycloak IAM management",
+            "MLOps and GitOps setup and high-performance Kubernetes cluster maintenance (SRE/Admin role)",
+            "IAM for humans and agents to access cloud resources and on-prem services",
             "Custom Kubernetes operator development and team leadership",
         ]),
         ("Application Engineer", "Rakuten, Inc. \u2014 Tokyo", "Jan 2018 \u2013 May 2022", [
@@ -154,7 +176,7 @@ def build_pdf(output_path):
         ]),
         ("Application Engineer", "Rakuten India", "Sep 2014 \u2013 Dec 2018", [
             "API development for IaaS (VMware), DNS (Nominum), and Load Balancers (BigIP)",
-            "Led 3-member team as Scrum Master",
+            "Led small team as Scrum Master",
             "Job automation via Apache Airflow",
         ]),
         ("Associate IT Consultant", "ITC Infotech / Bosch", "Jan 2014 \u2013 Sep 2014", [

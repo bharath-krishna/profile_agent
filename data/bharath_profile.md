@@ -4,6 +4,8 @@
 - Phones: +1 8574379316, +91 7760779000
 - Email: bharath.chakravarthi@gmail.com
 - Website: https://profile.krishb.in
+- LinkedIn: https://www.linkedin.com/in/bharath-krishna-652a7733/
+- GitHub: https://github.com/bharath-krishna
 
 ## Professional Summary
 Full-stack engineer with 15 years of professional experience (2010-2025). Proven expertise in building scalable AI/ML platforms, high-availability services, and DevOps pipelines. Strong background in designing LLM inference pipelines, managing Kubernetes clusters, and automating infrastructure with Terraform & Ansible. Deep knowledge of Python (15 years) and Go (7 years).

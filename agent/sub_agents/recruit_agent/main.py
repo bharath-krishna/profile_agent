@@ -1,11 +1,12 @@
 """Conversation Tracker Agent Definition."""
 
 import os
+from typing import Optional
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
-from .tools import save_conversation_note
-from .prompts import get_conversation_tracker_instructions
-
+from .tools import save_recruiter_info
+from .prompts import get_instructions
+from agent.sub_agents.models.agent_inputs import RecruitAgentInput, RecruitAgentOutput
 
 # Configure model
 use_litellm = os.getenv("USE_LITELLM", "false").lower() == "true"
@@ -22,12 +23,14 @@ else:
 
 
 # Create the Conversation Note agent
-conversation_note_agent = Agent(
-    name="ConversationNoteAgent",
+recruit_agent = Agent(
+    name="RecruitAgent",
     model=model,
     description="Specialized agent for saving conversation notes",
-    instruction=get_conversation_tracker_instructions(),
+    instruction=get_instructions(),
+    input_schema=RecruitAgentInput,
+    output_schema=RecruitAgentInput,
     tools=[
-        save_conversation_note
+        save_recruiter_info
     ]
 )

@@ -16,70 +16,75 @@ from typing import Dict, Optional
 
 from google.adk.tools import ToolContext, AgentTool
 
-from ..sub_agents.email_composer import email_composer_agent
-from ..sub_agents.conversation_tracker import conversation_note_agent
+from agent.sub_agents.recruit_agent import recruit_agent
 
 logger = logging.getLogger(__name__)
 
-
-async def compose_and_send_profile(
+async def gather_job_details(
     tool_context: ToolContext,
-    recipient_email: str,
-    format: str = "resume",
-    custom_message: Optional[str] = None
+    message: str,
+    email: str,
+    company: Optional[str] = None,
+    phone: Optional[str] = None,
+    notes: Optional[str] = "No additional notes",
 ) -> Dict[str, str]:
-    """Generate profile PDF and email it to a recipient.
+    """Save gathered detailed job information using the RecruitAgent sub-agent.
 
-    Uses the EmailComposer sub-agent to:
-    - Generate a professional PDF of Bharath's profile
-    - Send it via email to the specified recipient
-    - Handle PDF generation failures gracefully
+    Uses the RecruitAgent sub-agent to:
+    - Extract detailed job requirements and preferences from recruiter conversations
 
     Args:
         tool_context: Tool execution context with shared state
-        recipient_email: Email address to send the profile to
-        format: PDF format (resume, full_profile, etc.)
-        custom_message: Optional custom email message body
+        message: The recruiter conversation message
+        email: Recruiter's email address
+        company: Company name
+        phone: Recruiter's phone number
+        notes: Additional notes from the conversation
 
     Returns:
-        Dict with status, message, PDF path, and email details
+        Dict with status, message, and extracted job details
     """
-    logger.debug("compose_and_send_profile: %s", recipient_email)
+    args = {"message": message, "email": email, "company": company, "phone": phone, "notes": notes}
+    logger.debug("Gathering job details with input: %s", args)
 
-    # Create AgentTool wrapper for EmailComposer sub-agent
-    agent_tool = AgentTool(agent=email_composer_agent)
-
-    # Build request for sub-agent
-    request = f"""Generate a {format} PDF of Bharath's profile and email it to {recipient_email}.
-    {"Include this message: " + custom_message if custom_message else "Use the standard professional introduction."}
-    """
+    # Create AgentTool wrapper for RecruitAgent sub-agent
+    agent_tool = AgentTool(agent=recruit_agent)
 
     # Execute sub-agent asynchronously
     output = await agent_tool.run_async(
-        args={"request": request},
+        args=args,
         tool_context=tool_context
     )
 
-    # Update parent state with email action
     context_list = tool_context.state.get("conversation_context", [])
     if context_list is None:
         context_list = []
 
-    # Record the email action in conversation context
-    if isinstance(output, dict):
-        status = output.get("status", "unknown")
-        context_list.append(f"[EMAIL] Attempted to send {format} profile to {recipient_email} - Status: {status}")
-    else:
-        context_list.append(f"[EMAIL] Sent {format} profile to {recipient_email}")
-
+    # Add tool output to conversation context
+    context_entry = f"[TOOL] {output}"
+    context_list.append(context_entry)
     tool_context.state["conversation_context"] = context_list
+
+    logger.debug("conversation note saved: %s", output)
+
+    logger.debug("Job details gathered: %s", output)
+
+    output.update(**args)
+    import ipdb; ipdb.set_trace()
+    if output.get("status") == "success":
+        output["status"] = "confirmed"
+    else:
+        output["status"] = "rejected"
 
     return output
 
-
-async def track_conversation_note(
+async def save_recruiter_info(
     tool_context: ToolContext,
-    task: str,
+    message: str,
+    email: str,
+    company: Optional[str] = None,
+    phone: Optional[str] = None,
+    notes: Optional[str] = "No additional notes",
 ) -> Dict[str, str]:
     """Track a conversation note using the ConversationTracker sub-agent.
 
@@ -88,25 +93,46 @@ async def track_conversation_note(
 
     Args:
         tool_context: Tool execution context with shared state
-        task: The conversation task to save as a note
+        message: The conversation message to save as a note
+        email: The email address associated with the conversation
+        company: The company associated with the conversation
+        phone: The phone number associated with the conversation
+        notes: Optional additional notes for the conversation
 
     Returns:
         Dict with status, message, and file path
     """
-    logger.debug("track_conversation_note: %s", task)
+    args = {"message": message, "email": email, "company": company, "phone": phone, "notes": notes}
+    logger.debug("Recruiter info to save: %s", args)
 
     # Create AgentTool wrapper for ConversationNoteAgent sub-agent
-    agent_tool = AgentTool(agent=conversation_note_agent)
-
-    # Build request for sub-agent
-    request = f"""Save this conversation: {task}."""
+    agent_tool = AgentTool(agent=recruit_agent)
 
     # Execute sub-agent asynchronously
     output = await agent_tool.run_async(
-        args={"request": request},
+        args=args,
         tool_context=tool_context
     )
 
+    context_list = tool_context.state.get("conversation_context", [])
+    if context_list is None:
+        context_list = []
+
+    # Add tool output to conversation context
+    context_entry = f"[TOOL] {output}"
+    context_list.append(context_entry)
+    tool_context.state["conversation_context"] = context_list
+
     logger.debug("conversation note saved: %s", output)
 
+    output.update(**args)
+    if output.get("status") == "success":
+        output["status"] = "confirmed"
+    else:
+        output["status"] = "rejected"
+
     return output
+    # if output.get("status") == "success":
+    #     return output.get("response", "Saved recruiter info successfully.")
+    # else:
+    #     return "Failed to save recruiter info."
