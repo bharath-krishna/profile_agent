@@ -683,23 +683,9 @@ export default function ProfilePage() {
                   />
 
                   <ProjectItem
-                    title="bharath-krishna"
-                    description="GitHub profile with README, contribution stats, and custom theme settings."
-                    githubUrl="https://github.com/bharath-krishna/bharath-krishna"
-                    liveUrl="https://github.com/bharath-krishna"
-                  />
-
-                  <ProjectItem
                     title="fastapi_framework"
                     description="Reusable FastAPI framework with best practices for Python backend development."
                     githubUrl="https://github.com/bharath-krishna/fastapi_framework"
-                    liveUrl="https://profile.krishb.in"
-                  />
-
-                  <ProjectItem
-                    title="Docs"
-                    description="Technical documentation site with MDX support for knowledge sharing."
-                    githubUrl="https://github.com/bharath-krishna/docs"
                     liveUrl="https://profile.krishb.in"
                   />
                 </SimpleGrid>

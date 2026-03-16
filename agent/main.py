@@ -319,6 +319,21 @@ Full-stack engineer with 15 years of professional experience (2010-2025). Proven
 - Agile-Scrum methodology
 - Quick learner, self-starter, team player
 
+## Featured Projects
+### Profile Agent
+AI-forward portfolio that embeds an on-page assistant able to answer recruiter questions contextually.
+Includes health checks, session stats, and Ask-AI hooks across every section for deeper conversations.
+- Tech Stack: Next.js 14, React Server Components, CopilotKit, Google ADK backend (FastAPI), Chakra UI, Tailwind CSS, LiteLLM router
+- GitHub: https://github.com/bharath-krishna/profile_agent
+- Deployment: https://profile.krishb.in
+
+### FastAPI Framework
+Modular starter kit that encodes Bharath's best practices for production-grade Python services.
+Ships with opinionated architecture for auth, observability, and CI/CD so new services bootstrap quickly.
+- Tech Stack: FastAPI, Pydantic, SQLModel, Celery workers, Redis, PostgreSQL, GitHub Actions
+- GitHub: https://github.com/bharath-krishna/fastapi_framework
+- Deployment: https://profile.krishb.in (framework services hosted behind the main domain)
+
 ## Conversation Notes
 {conversation_notes}
 
