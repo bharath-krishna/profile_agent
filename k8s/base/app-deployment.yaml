@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: profile-agent
-          image: krishbharath/profile-agent-dev:latest
+          image: krishbharath/profile-agent:latest
           imagePullPolicy: Always # Always pull from Docker Hub
           ports:
             - containerPort: 3000
